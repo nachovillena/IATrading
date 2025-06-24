@@ -1,0 +1,45 @@
+# config/config.yml
+
+# Lista de símbolos a procesar
+symbols:
+  - EURUSD
+  - GBPUSD
+  - USDJPY
+
+# Temporalidades a generar (M1 solo vía HistData; el resto nativo si está soportado)
+timeframes:
+  - M1
+  - 5m
+  - 15m
+  - 1h
+  - 4h
+  - daily
+
+parameters:
+
+# Orden de prioridad de fuentes de datos
+data_sources:
+  - histdata
+  - local
+  - yahoo
+  - binance
+  - alpha
+  - quandl
+
+# Parámetros para la optimización (ejemplo de EMA y RSI)
+parameters:
+  ema_fast: [5, 20]
+  ema_slow: [21, 50]
+  rsi_period: [14, 21]
+  breakout_threshold: [0.01, 0.05]
+
+cache_ttl_days: 1      # ✅ ahora es un campo propio
+
+# Rutas de datos relativas al proyecto
+data_paths:
+  histdata: data/histdata          # ZIPs de HistData (M1)
+  cache:    data/cache             # Parquets cacheados
+  processed: data/processed        # CSVs procesados por símbolo/TF
+
+# (Opcional) URL de conexión a base de datos SQLAlchemy
+# db_url: postgresql://user:pass@host:5432/dbname
