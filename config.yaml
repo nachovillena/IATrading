@@ -1,0 +1,53 @@
+# Trading System Configuration
+
+data_pipeline:
+  cache:
+    enabled: true
+    cache_dir: "data/cache"
+    ttl_hours: 24
+  
+  quality:
+    min_records: 100
+    max_gap_hours: 24
+    required_columns: ["open", "high", "low", "close", "volume"]
+  
+  providers:
+    yahoo:
+      timeout: 30
+      retry_attempts: 3
+    mt5:
+      timeout: 30
+      login: null
+      password: null
+      server: null
+
+strategies:
+  ema:
+    ema_fast: 12
+    ema_slow: 26
+    signal_threshold: 0.001
+  
+  rsi:
+    rsi_period: 14
+    oversold: 30
+    overbought: 70
+  
+  macd:
+    fast_period: 12
+    slow_period: 26
+    signal_period: 9
+
+ml:
+  features:
+    technical_indicators: true
+    market_data: true
+    time_features: true
+  
+  models:
+    default_model: "random_forest"
+    hyperparameter_tuning: true
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/trading_system.log"

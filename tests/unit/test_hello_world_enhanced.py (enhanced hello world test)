@@ -1,0 +1,17 @@
+def test_hello_world():
+    assert "Hello, World!" == "Hello, World!"
+
+def test_hello_world_with_exclamation():
+    assert "Hello, World!" == "Hello, World!"
+
+def test_hello_world_without_exclamation():
+    assert "Hello, World" != "Hello, World!"
+
+def test_hello_world_case_insensitivity():
+    assert "hello, world!" == "Hello, World!"
+
+def test_hello_world_length():
+    assert len("Hello, World!") == 13
+
+def test_hello_world_empty_string():
+    assert "Hello, World!" != ""

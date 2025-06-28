@@ -1,0 +1,228 @@
+{
+  "_metadata": {
+    "description": "Configuración completa para evaluación de estrategias de trading",
+    "version": "1.0",
+    "last_updated": "2025-01-31"
+  },
+  
+  "analysis_settings": {
+    "_description": "Configuración general del análisis de rendimiento",
+    
+    "base_amounts": {
+      "_comment": "Montos de inversión inicial para simulaciones (en USD/EUR)",
+      "_example": "[1000, 5000, 10000, 50000] = simula inversiones desde $1K hasta $50K",
+      "value": [1000, 5000, 10000, 25000, 50000, 100000]
+    },
+    
+    "reinvest_frequency": {
+      "_comment": "Frecuencia de reinversión para cálculo de interés compuesto",
+      "_options": ["daily", "weekly", "monthly", "quarterly"],
+      "_recommendation": "monthly (balance entre compounding y realismo)",
+      "value": "monthly"
+    },
+    
+    "include_compound_analysis": {
+      "_comment": "Activar análisis de interés compuesto (reinversión automática de ganancias)",
+      "_note": "Muestra diferencia entre trading simple vs reinversión periódica",
+      "value": true
+    },
+    
+    "include_commission_analysis": {
+      "_comment": "Incluir análisis realista de comisiones y spreads de broker",
+      "_note": "Calcula impacto real de costos de trading en la rentabilidad",
+      "value": true
+    },
+    
+    "show_detailed_trades": {
+      "_comment": "Mostrar detalles específicos de trades (número, tamaño, costos)",
+      "_note": "Información útil para evaluar actividad de trading",
+      "value": true
+    },
+    
+    "show_volatility_analysis": {
+      "_comment": "Incluir análisis de volatilidad y distribución de returns",
+      "_note": "Métricas como mejor/peor período, volatilidad promedio",
+      "value": true
+    }
+  },
+  
+  "forex_commission": {
+    "_description": "Configuración realista de costos de trading forex",
+    
+    "spread_pips": {
+      "_comment": "Spread promedio en pips para el par de divisas",
+      "_example": "1.5 pips es típico para EURUSD en brokers principales",
+      "_range": "0.5-3.0 pips dependiendo del broker y condiciones de mercado",
+      "value": 1.5
+    },
+    
+    "commission_per_lot": {
+      "_comment": "Comisión del broker por lote estándar (100,000 unidades)",
+      "_example": "$7 por lote es común en brokers ECN/STP",
+      "_range": "$0-15 por lote dependiendo del tipo de cuenta",
+      "value": 7.0
+    },
+    
+    "pip_value": {
+      "_comment": "Valor monetario de 1 pip en lote estándar (USD)",
+      "_note": "Para EURUSD: 1 pip = $10 en lote estándar",
+      "_other_pairs": "USDJPY: ~$9, GBPUSD: ~$10",
+      "value": 10.0
+    },
+    
+    "leverage": {
+      "_comment": "Apalancamiento máximo disponible",
+      "_example": "100 = 1:100, permite controlar $100K con $1K",
+      "_warning": "Mayor apalancamiento = mayor riesgo",
+      "_typical_ranges": "30-500 dependiendo de regulación (EU: máx 30, otros: hasta 500)",
+      "value": 100
+    },
+    
+    "min_trade_size": {
+      "_comment": "Tamaño mínimo de trade en lotes",
+      "_example": "0.01 = micro lote (1,000 unidades)",
+      "_standard": "0.01 (micro), 0.1 (mini), 1.0 (estándar)",
+      "value": 0.01
+    },
+    
+    "broker_name": {
+      "_comment": "Nombre del broker para referencia en reportes",
+      "_note": "Solo informativo, no afecta cálculos",
+      "value": "Broker Promedio"
+    }
+  },
+  
+  "risk_thresholds": {
+    "_description": "Umbrales para clasificación automática de riesgo y rendimiento",
+    
+    "low_drawdown": {
+      "_comment": "Umbral de drawdown considerado 'bajo riesgo'",
+      "_interpretation": "Drawdown < 5% = riesgo muy conservador",
+      "value": 0.05
+    },
+    
+    "moderate_drawdown": {
+      "_comment": "Umbral de drawdown considerado 'riesgo moderado'",
+      "_interpretation": "5% < Drawdown < 15% = riesgo aceptable para muchos traders",
+      "value": 0.15
+    },
+    
+    "high_drawdown": {
+      "_comment": "Umbral de drawdown considerado 'alto riesgo'",
+      "_interpretation": "Drawdown > 25% = riesgo muy alto, requiere gestión cuidadosa",
+      "value": 0.25
+    },
+    
+    "excellent_annual_return": {
+      "_comment": "Return anualizado considerado 'excelente'",
+      "_benchmark": "> 15% anual supera a la mayoría de fondos de inversión",
+      "_context": "S&P 500 promedio histórico: ~10% anual",
+      "value": 0.15
+    },
+    
+    "good_annual_return": {
+      "_comment": "Return anualizado considerado 'bueno'",
+      "_benchmark": "> 8% anual es sólido para trading sistemático",
+      "_context": "Supera a bonos del gobierno y muchos ETFs",
+      "value": 0.08
+    },
+    
+    "moderate_annual_return": {
+      "_comment": "Return anualizado mínimo para considerar viable",
+      "_benchmark": "> 3% anual supera inflación típica",
+      "_context": "Por debajo de esto, mejor invertir en índices pasivos",
+      "value": 0.03
+    }
+  },
+  
+  "report_format": {
+    "_description": "Configuración del formato y presentación de reportes",
+    
+    "show_emojis": {
+      "_comment": "Usar emojis en reportes para mejor legibilidad",
+      "_note": "Desactivar si se usa en sistemas que no soportan emojis",
+      "value": true
+    },
+    
+    "detailed_investment_table": {
+      "_comment": "Mostrar tabla detallada con simulaciones de inversión",
+      "_content": "Compara escenarios: básico, compuesto, realista (con comisiones)",
+      "value": true
+    },
+    
+    "show_monthly_projections": {
+      "_comment": "Incluir proyecciones de rendimiento mensual",
+      "_calculation": "Basado en performance del período evaluado",
+      "value": true
+    },
+    
+    "show_annual_projections": {
+      "_comment": "Incluir proyecciones de rendimiento anualizado",
+      "_warning": "Proyecciones basadas en datos limitados pueden no ser representativas",
+      "value": true
+    },
+    
+    "comparison_ranking": {
+      "_comment": "Método para rankear estrategias en comparación final",
+      "_options": ["risk_adjusted", "total_return"],
+      "_risk_adjusted": "Ordena por return dividido por drawdown (mejor relación riesgo/beneficio)",
+      "_total_return": "Ordena solo por return total (ignora riesgo)",
+      "_recommendation": "risk_adjusted para trading conservador",
+      "value": "risk_adjusted"
+    },
+    
+    "currency_format": {
+      "_comment": "Formato de moneda para mostrar en reportes",
+      "_options": ["USD", "EUR"],
+      "_note": "Solo afecta presentación, cálculos en base a pip_value",
+      "value": "USD"
+    }
+  },
+  
+  "advanced_analysis": {
+    "_description": "Métricas avanzadas opcionales (pueden aumentar tiempo de procesamiento)",
+    
+    "calculate_sharpe_ratio": {
+      "_comment": "Calcular Sharpe Ratio (return ajustado por volatilidad)",
+      "_formula": "Return promedio / Desviación estándar",
+      "_interpretation": "> 1.0 = bueno, > 2.0 = excelente",
+      "_note": "Métrica estándar en finanzas cuantitativas",
+      "value": true
+    },
+    
+    "calculate_sortino_ratio": {
+      "_comment": "Calcular Sortino Ratio (como Sharpe pero solo penaliza volatilidad negativa)",
+      "_advantage": "Más relevante que Sharpe para trading (no penaliza ganancias volátiles)",
+      "_interpretation": "Generalmente mayor que Sharpe Ratio",
+      "value": true
+    },
+    
+    "calculate_max_consecutive_losses": {
+      "_comment": "Calcular máximo número de pérdidas consecutivas",
+      "_utility": "Importante para gestión psicológica del trading",
+      "_interpretation": "< 5 = bueno, > 10 = requiere atención",
+      "value": true
+    },
+    
+    "calculate_win_rate": {
+      "_comment": "Calcular porcentaje de trades/períodos ganadores",
+      "_formula": "Períodos positivos / Total períodos",
+      "_note": "Win rate alto no garantiza rentabilidad (depende del tamaño de ganancias vs pérdidas)",
+      "value": true
+    },
+    
+    "monte_carlo_simulations": {
+      "_comment": "Ejecutar simulaciones Monte Carlo para análisis de riesgo",
+      "_warning": "Funcionalidad avanzada, no implementada aún",
+      "_future": "Simulará múltiples escenarios aleatorios basados en distribución histórica",
+      "value": false
+    },
+    
+    "stress_test_scenarios": {
+      "_comment": "Probar estrategia bajo condiciones de mercado extremas",
+      "_warning": "Funcionalidad avanzada, no implementada aún",
+      "_future": "Simulará crashes, alta volatilidad, períodos de baja liquidez",
+      "value": false
+    }
+  }
+}

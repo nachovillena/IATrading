@@ -1,0 +1,5 @@
+from src.orchestrator import TradingOrchestrator
+
+def test_trading_orchestrator():
+    orchestrator = TradingOrchestrator()
+    assert orchestrator is not None

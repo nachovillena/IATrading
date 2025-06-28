@@ -1,0 +1,147 @@
+# Configuración del Sistema de Trading con IA
+
+# === CONFIGURACIÓN DE DATOS ===
+data:
+  sources:
+    yahoo:
+      enabled: true
+      timeout: 30
+    mt5:
+      enabled: true
+      timeout: 30
+    alpha_vantage:
+      enabled: false
+      api_key: ""
+      
+  cache:
+    directory: "data/cache"
+    format: "parquet"
+    compression: "snappy"
+    
+  quality:
+    min_score: 0.7
+    weights:
+      completeness: 0.3
+      accuracy: 0.25
+      timeliness: 0.2
+      consistency: 0.15
+      coverage: 0.1
+      
+  file:
+    base_dir: "data/files"
+    file_format: "csv"
+    date_format: "%Y-%m-%d %H:%M:%S"
+
+# === CONFIGURACIÓN DE TRADING ===
+trading:
+  symbols:
+    - "EURUSD"
+    - "GBPUSD" 
+    - "USDJPY"
+    - "AUDUSD"
+    - "USDCAD"
+    
+  timeframes:
+    - "M1"
+    - "M5" 
+    - "M15"
+    - "M30"
+    - "H1"
+    - "H4"
+    - "D1"
+    
+  default_symbol: "EURUSD"
+  default_timeframe: "H1"
+
+# === CONFIGURACIÓN DE ESTRATEGIAS ===
+strategies:
+  default_timeframe: "H1"
+  max_active: 10
+  auto_discovery: true
+  paths:
+    base: "strategies"
+    custom: "custom_strategies"
+  defaults:
+    risk_per_trade: 0.02
+    max_positions: 3
+    stop_loss: 0.02
+    take_profit: 0.04
+
+# === CONFIGURACIÓN DE LOGGING ===
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/trading.log"
+
+# === CONFIGURACIÓN DE PATHS ===
+paths:
+  data: "data"
+  cache: "data/cache"
+  signals: "senales"
+  strategies: "strategies"
+  logs: "logs"
+  config: "config"
+
+# === CONFIGURACIÓN DE ML ===
+ml:
+  features:
+    window_sizes: [14, 21, 50]
+    use_ta_lib: true
+    technical_indicators:
+      - "RSI"
+      - "MACD"
+      - "BB"
+      - "EMA"
+    
+  training:
+    test_size: 0.2
+    cv_folds: 5
+    random_state: 42
+    
+  optimization:
+    n_trials: 100
+    timeout: 3600
+    metric: "sharpe_ratio"
+    
+  models:
+    default: "random_forest"
+    parameters:
+      random_forest:
+        n_estimators: 100
+        max_depth: 10
+      xgboost:
+        n_estimators: 100
+        learning_rate: 0.1
+
+# === CONFIGURACIÓN DEL SISTEMA ===
+system:
+  name: "IATrading"
+  version: "1.0.0"
+  environment: "development"
+  debug: true
+  workers: 4
+  max_memory: "2GB"
+  
+  monitoring:
+    enabled: true
+    interval: 60
+    metrics:
+      - "cpu_usage"
+      - "memory_usage"
+      - "active_strategies"
+      
+  cleanup:
+    enabled: true
+    interval: 86400  # 24 hours
+    keep_days: 30
+    
+  notifications:
+    enabled: true
+    methods:
+      - "log"
+      - "email"
+    email:
+      smtp_server: ""
+      port: 587
+      username: ""
+      password: ""

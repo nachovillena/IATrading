@@ -1,0 +1,26 @@
+{   
+    "strategy_name": "macd",
+    "description": "Estrategia basada en cruce de MACD optimizada",
+    "main_timeframe": "H1",
+    "optimized_params": [],
+    "default_params": {
+        "fast_period": 12,
+        "slow_period": 26,
+        "signal_period": 9,
+        "stop_loss": 0.02,
+        "take_profit": 0.04
+    },
+    "param_space": {
+        "fast_period": [8, 16],
+        "slow_period": [20, 30],
+        "signal_period": [7, 12],
+        "stop_loss": [0.01, 0.05],
+        "take_profit": [0.02, 0.06]
+    },
+    "risk_metrics": {
+        "max_drawdown": 0.005710302226250049,
+        "profit_factor": "Infinity",
+        "expectancy": 0.012576359246023598
+    },
+  "context_timeframes": ["H4", "D1"]
+}

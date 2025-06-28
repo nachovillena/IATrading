@@ -1,0 +1,21 @@
+{
+  "ema": [
+    {
+      "ema_fast": 26.0,
+      "ema_slow": 78.0,
+      "symbol": "EURUSD",
+      "timeframe": "H1",
+      "sharpe_ratio": 0.0025808023865574
+    }
+  ],
+  "rsi": [
+    {
+      "overbought": 60.0,
+      "oversold": 40.0,
+      "rsi_period": 20.0,
+      "symbol": "EURUSD",
+      "timeframe": "H1",
+      "sharpe_ratio": 0.0025814090124054
+    }
+  ]
+}

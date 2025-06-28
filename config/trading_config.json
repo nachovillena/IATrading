@@ -1,0 +1,24 @@
+{
+  "data": {
+    "cache_dir": "data/cache",
+    "timeframes": [
+      "H1",
+      "H4",
+      "D1"
+    ],
+    "quality_threshold": 0.8
+  },
+  "trading": {
+    "default_symbol": "EURUSD",
+    "risk_per_trade": 0.02,
+    "max_positions": 3
+  },
+  "optimization": {
+    "trials": 100,
+    "cv_folds": 5,
+    "metrics": [
+      "sharpe_ratio",
+      "max_drawdown"
+    ]
+  }
+}

@@ -1,5 +1,32 @@
 # Proyecto Final de Trading IA
 
+┌─────────────────────────────────────────────────────────────────┐
+│                     SISTEMA IA TRADING                          │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌──────────────┐ │
+│  │   INGESTIÓN     │───▶│   PROCESSING    │───▶│   ML/AI      │ │
+│  │                 │    │                 │    │              │ │
+│  │ • data_pipeline │    │ • utils         │    │ • train      │ │
+│  │ • config        │    │ • feature_eng   │    │ • optimize   │ │
+│  │ • multi-sources │    │ • validation    │    │ • validate   │ │
+│  └─────────────────┘    └─────────────────┘    └──────────────┘ │
+│           │                       │                      │      │
+│           ▼                       ▼                      ▼      │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌──────────────┐ │
+│  │    STORAGE      │    │   BACKTESTING   │    │  EXECUTION   │ │
+│  │                 │    │                 │    │              │ │
+│  │ • cache/        │    │ • evaluate      │    │ • signals    │ │
+│  │ • parquet       │    │ • grid_search   │    │ • risk_mgmt  │ │
+│  │ • models/       │    │ • tune_risk     │    │ • live_trade │ │
+│  └─────────────────┘    └─────────────────┘    └──────────────┘ │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │                    INTERFACES                               │ │
+│  │  • menu.py (interactive)  • cli.py (command-line)          │ │
+│  └─────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+
 ## Características
 - Ingestión de datos multi-fuente con validación de integridad (Pandera)
 - Pipeline modular: optimización, validación, entrenamiento, generación de señales, ajuste de riesgo, búsqueda fina, evaluación

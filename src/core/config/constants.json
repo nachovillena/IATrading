@@ -1,0 +1,48 @@
+{
+  "signals": {
+    "SIGNAL_BUY": 1,
+    "SIGNAL_HOLD": 0,
+    "SIGNAL_SELL": -1,
+    "SIGNAL_NAMES": {
+      "1": "BUY",
+      "0": "HOLD",
+      "-1": "SELL"
+    }
+  },
+  "timeframes": {
+    "1m": "M1",
+    "5m": "M5",
+    "15m": "M15",
+    "30m": "M30",
+    "1h": "H1",
+    "4h": "H4",
+    "1d": "D1",
+    "1w": "W1"
+  },
+  "symbols": {
+    "forex_pairs": [
+      "EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD",
+      "USDCHF", "NZDUSD", "EURJPY", "GBPJPY", "AUDJPY"
+    ],
+    "major_stocks": [
+      "AAPL", "GOOGL", "MSFT", "AMZN", "TSLA",
+      "META", "NVDA", "NFLX", "BABA", "V"
+    ]
+  },
+  "optimization": {
+    "metrics": [
+      "sharpe_ratio",
+      "total_return",
+      "calmar_ratio",
+      "sortino_ratio",
+      "profit_factor",
+      "win_rate"
+    ]
+  },
+  "trade_status": {
+    "OPEN": "Posición abierta",
+    "CLOSED": "Posición cerrada",
+    "CANCELLED": "Operación cancelada",
+    "PENDING": "Orden pendiente"
+  }
+}

@@ -1,0 +1,355 @@
+"""Trading strategies implementation"""
+
+import pandas as pd
+from typing import Dict, Any, Optional, List
+from pathlib import Path
+import importlib
+import inspect
+from datetime import datetime
+
+from ..core.base import BaseStrategy
+from ..core.types import TradingData, SignalData
+from ..core.exceptions import StrategyError
+
+class StrategyManager:
+    """Manages all trading strategies"""
+    
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
+        """Initialize strategy manager
+        
+        Args:
+            config: Optional configuration dictionary for strategy settings
+        """
+        self._config = config or {}
+        self._active_strategies: Dict[str, BaseStrategy] = {}
+        self._available_strategies: List[str] = []
+        
+        # Discover and register strategies
+        self._discover_strategies()
+        self._register_default_strategies()
+    
+    def _discover_strategies(self) -> None:
+        """Discover available strategies in strategies directory"""
+        try:
+            strategies_dir = Path(__file__).parent
+            strategy_modules = [
+                d.name for d in strategies_dir.iterdir() 
+                if d.is_dir() and not d.name.startswith('_')
+            ]
+            self._available_strategies.extend(strategy_modules)
+        except Exception as e:
+            raise StrategyError(f"Error discovering strategies: {e}")
+    
+    def _register_default_strategies(self) -> None:
+        """Register default strategies with their configs"""
+        default_configs = {
+            'ema': {
+                'ema_fast': 12,
+                'ema_slow': 26,
+                'symbol': self._config.get('default_symbol', 'EURUSD'),
+                'timeframe': self._config.get('default_timeframe', 'H1'),
+                'signal_threshold': 0.001
+            },
+            'rsi': {
+                'rsi_period': 14,
+                'oversold': 30,
+                'overbought': 70,
+                'symbol': self._config.get('default_symbol', 'EURUSD'),
+                'timeframe': self._config.get('default_timeframe', 'H1')
+            },
+            'macd': {
+                'fast_period': 12,
+                'slow_period': 26,
+                'signal_period': 9,
+                'symbol': self._config.get('default_symbol', 'EURUSD'),
+                'timeframe': self._config.get('default_timeframe', 'H1')
+            }
+        }
+        
+        # Register each strategy
+        strategy_classes = {
+            'ema': EMAStrategy,
+            'rsi': RSIStrategy,
+            'macd': MACDStrategy
+        }
+        
+        for name, config in default_configs.items():
+            strategy_class = strategy_classes.get(name)
+            if strategy_class:
+                self.register_strategy(name, strategy_class, config)
+    
+    def register_strategy(self, name: str, strategy_class: type, config: Optional[Dict[str, Any]] = None) -> None:
+        """Register a new strategy"""
+        if not issubclass(strategy_class, BaseStrategy):
+            raise StrategyError(f"Strategy {name} must inherit from BaseStrategy")
+        
+        # Merge strategy-specific config with global config
+        strategy_config = {**self._config.get(name, {}), **(config or {})}
+        
+        if name not in self._active_strategies:
+            self._active_strategies[name] = strategy_class(config=strategy_config)
+    
+    def get_available_strategies(self) -> List[str]:
+        """Get list of available strategies"""
+        return list(self._active_strategies.keys())
+
+    def get_active_strategies(self) -> List[Dict[str, Any]]:
+        """Get list of active strategies and their status"""
+        active_list = []
+        for name, strategy in self._active_strategies.items():
+            try:
+                strategy_info = {
+                    'name': name,
+                    'class': strategy.__class__.__name__,
+                    'status': 'active',
+                    'symbol': strategy.params.get('symbol', 'unknown'),
+                    'timeframe': strategy.params.get('timeframe', 'unknown'),
+                    'last_update': strategy.last_update.isoformat() if hasattr(strategy, 'last_update') else None
+                }
+                
+                # Add strategy parameters
+                strategy_info['parameters'] = {
+                    k: v for k, v in strategy.params.items() 
+                    if k not in ['symbol', 'timeframe']
+                }
+                
+                active_list.append(strategy_info)
+                
+            except Exception as e:
+                active_list.append({
+                    'name': name,
+                    'class': strategy.__class__.__name__,
+                    'status': 'error',
+                    'error': str(e)
+                })
+        
+        return active_list
+
+    def load_strategy(self, strategy_name: str, **kwargs) -> BaseStrategy:
+        """Load a strategy by name with configuration"""
+        try:
+            # Check if strategy is already registered
+            if strategy_name in self._active_strategies:
+                # Create new instance with specific config
+                strategy_class = self._active_strategies[strategy_name].__class__
+                return strategy_class(config=kwargs)
+            
+            # Try to find strategy class by name
+            strategy_classes = {
+                'ema': EMAStrategy,
+                'rsi': RSIStrategy,
+                'macd': MACDStrategy
+            }
+            
+            strategy_class = strategy_classes.get(strategy_name.lower())
+            if not strategy_class:
+                raise StrategyError(f"Strategy class not found for: {strategy_name}")
+            
+            # Create and return strategy instance
+            return strategy_class(config=kwargs)
+            
+        except Exception as e:
+            raise StrategyError(f"Error loading strategy {strategy_name}: {e}")
+
+class EMAStrategy(BaseStrategy):
+    """Exponential Moving Average strategy"""
+    
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
+        """Initialize EMA strategy
+        
+        Args:
+            config: Strategy configuration with parameters:
+                - symbol: Trading symbol (default: EURUSD)
+                - timeframe: Trading timeframe (default: H1)
+                - ema_fast: Fast EMA period (default: 12)
+                - ema_slow: Slow EMA period (default: 26)
+                - signal_threshold: Signal threshold (default: 0.001)
+        """
+        self.config = config or {}
+        self.params = {**self.get_default_params(), **self.config}
+        self.name = self.__class__.__name__
+        self.last_update = datetime.now()
+    
+    def get_default_params(self) -> Dict[str, Any]:
+        """Get default strategy parameters"""
+        return {
+            'symbol': 'EURUSD',
+            'timeframe': 'H1',
+            'ema_fast': 12,
+            'ema_slow': 26,
+            'signal_threshold': 0.001
+        }
+
+    def calculate_indicators(self, data: TradingData) -> Dict[str, Any]:
+        """Calculate EMA indicators
+        
+        Args:
+            data: Price data with OHLCV columns
+            
+        Returns:
+            Dictionary with calculated indicators
+        """
+        df = data.data.copy()
+        indicators = {
+            'ema_fast': df['close'].ewm(span=self.params['ema_fast']).mean(),
+            'ema_slow': df['close'].ewm(span=self.params['ema_slow']).mean()
+        }
+        return indicators
+
+    def generate_signals(self, data: TradingData, indicators: Dict[str, Any]) -> SignalData:
+        """Generate trading signals
+        
+        Args:
+            data: Price data
+            indicators: Technical indicators
+            
+        Returns:
+            SignalData with buy/sell signals
+        """
+        try:
+            # Calculate crossovers
+            signals = pd.DataFrame(index=data.data.index)
+            signals['signal'] = 0
+            
+            # Buy when fast crosses above slow
+            signals.loc[indicators['ema_fast'] > indicators['ema_slow'], 'signal'] = 1
+            
+            # Sell when fast crosses below slow
+            signals.loc[indicators['ema_fast'] < indicators['ema_slow'], 'signal'] = -1
+            
+            # Create SignalData object
+            return SignalData(
+                signals=signals['signal'],
+                metadata={
+                    'strategy': self.name,
+                    'parameters': self.params,
+                    'timestamp': datetime.now()
+                }
+            )
+            
+        except Exception as e:
+            raise StrategyError(f"Error generating EMA signals: {str(e)}")
+
+class RSIStrategy(BaseStrategy):
+    """Relative Strength Index strategy"""
+    
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
+        """Initialize RSI strategy"""
+        self.config = config or {}
+        self.params = {**self.get_default_params(), **self.config}
+        self.name = self.__class__.__name__
+        self.last_update = datetime.now()
+    
+    def get_default_params(self) -> Dict[str, Any]:
+        """Get default strategy parameters"""
+        return {
+            'symbol': 'EURUSD',
+            'timeframe': 'H1',
+            'rsi_period': 14,
+            'oversold': 30,
+            'overbought': 70
+        }
+
+    def calculate_indicators(self, data: TradingData) -> Dict[str, Any]:
+        """Calculate RSI indicator"""
+        df = data.data.copy()
+        
+        # Calculate RSI
+        delta = df['close'].diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=self.params['rsi_period']).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=self.params['rsi_period']).mean()
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs))
+        
+        return {'rsi': rsi}
+
+    def generate_signals(self, data: TradingData, indicators: Dict[str, Any]) -> SignalData:
+        """Generate RSI-based trading signals"""
+        try:
+            signals = pd.DataFrame(index=data.data.index)
+            signals['signal'] = 0
+            
+            rsi = indicators['rsi']
+            
+            # Buy when RSI crosses above oversold level
+            signals.loc[rsi < self.params['oversold'], 'signal'] = 1
+            
+            # Sell when RSI crosses above overbought level
+            signals.loc[rsi > self.params['overbought'], 'signal'] = -1
+            
+            return SignalData(
+                signals=signals['signal'],
+                metadata={
+                    'strategy': self.name,
+                    'parameters': self.params,
+                    'timestamp': datetime.now()
+                }
+            )
+            
+        except Exception as e:
+            raise StrategyError(f"Error generating RSI signals: {str(e)}")
+
+
+class MACDStrategy(BaseStrategy):
+    """MACD (Moving Average Convergence Divergence) strategy"""
+    
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
+        """Initialize MACD strategy"""
+        self.config = config or {}
+        self.params = {**self.get_default_params(), **self.config}
+        self.name = self.__class__.__name__
+        self.last_update = datetime.now()
+    
+    def get_default_params(self) -> Dict[str, Any]:
+        """Get default strategy parameters"""
+        return {
+            'symbol': 'EURUSD',
+            'timeframe': 'H1',
+            'fast_period': 12,
+            'slow_period': 26,
+            'signal_period': 9
+        }
+
+    def calculate_indicators(self, data: TradingData) -> Dict[str, Any]:
+        """Calculate MACD indicators"""
+        df = data.data.copy()
+        
+        # Calculate MACD
+        ema_fast = df['close'].ewm(span=self.params['fast_period']).mean()
+        ema_slow = df['close'].ewm(span=self.params['slow_period']).mean()
+        macd = ema_fast - ema_slow
+        signal = macd.ewm(span=self.params['signal_period']).mean()
+        histogram = macd - signal
+        
+        return {
+            'macd': macd,
+            'signal': signal,
+            'histogram': histogram
+        }
+
+    def generate_signals(self, data: TradingData, indicators: Dict[str, Any]) -> SignalData:
+        """Generate MACD-based trading signals"""
+        try:
+            signals = pd.DataFrame(index=data.data.index)
+            signals['signal'] = 0
+            
+            macd = indicators['macd']
+            signal_line = indicators['signal']
+            
+            # Buy when MACD crosses above signal line
+            signals.loc[macd > signal_line, 'signal'] = 1
+            
+            # Sell when MACD crosses below signal line
+            signals.loc[macd < signal_line, 'signal'] = -1
+            
+            return SignalData(
+                signals=signals['signal'],
+                metadata={
+                    'strategy': self.name,
+                    'parameters': self.params,
+                    'timestamp': datetime.now()
+                }
+            )
+            
+        except Exception as e:
+            raise StrategyError(f"Error generating MACD signals: {str(e)}")

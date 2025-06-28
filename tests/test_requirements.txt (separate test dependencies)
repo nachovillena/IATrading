@@ -1,0 +1,10 @@
+pytest
+pytest-html
+pytest-cov
+Faker
+mock
+anyio
+asyncio
+typeguard
+json-report
+```
