@@ -13,6 +13,7 @@ from ..data.pipeline import DataPipeline
 from ..ml.optimization import HyperparameterOptimizer
 from ..trading.signals import SignalManager
 from ..utils.logger import Logger
+from ..utils.utils import graficar_datos
 
 class MenuInterface:
     """Interactive menu interface for the trading system"""
@@ -61,7 +62,8 @@ class MenuInterface:
             ("Ejecutar diagnósticos", self.run_diagnostics),
             ("Ver estado del sistema", self.system_status),
             ("Backup de configuración", self.backup_config),
-            ("Salir", None)
+            ("Salir", None),
+            ("Visualizar datos históricos (gráfica)", self.visualizar_datos_historicos)
         ]
     def importar_historico_mt5_menu(self):
         """Importar histórico completo de MT5 para un símbolo"""
@@ -706,6 +708,42 @@ class MenuInterface:
                     print(f"✅ Datos en caché para {tf} ({len(data.data)} registros)")
             except Exception as e:
                 print(f"❌ Error al consultar {tf}: {e}")
+
+    def visualizar_datos_historicos(self):
+        """Visualizar datos históricos con gráficos y alineación temporal"""
+        print("📈 VISUALIZAR DATOS HISTÓRICOS")
+        print("-" * 30)
+        symbol = self.get_symbol_input()
+        timeframes = ['M15', 'H1', 'H4']
+        data = {}
+        for tf in timeframes:
+            try:
+                result = self.data_pipeline.fetch_data(symbol, tf, allow_download=False)
+                if result and not result.data.empty:
+                    data[tf] = result.data
+            except Exception as e:
+                print(f"❌ Error al cargar {tf}: {e}")
+        if not data:
+            print("❌ No hay datos para graficar.")
+            return
+        # Mostrar alineación temporal
+        from src.utils.utils import chequear_alineacion_temporal
+        chequear_alineacion_temporal(data)
+        # Preguntar si quiere ver EMAs
+        mostrar_ema = input("¿Mostrar EMAs en el gráfico? (s/n): ").strip().lower() == 's'
+        ema_fast = 12
+        ema_slow = 26
+        if mostrar_ema:
+            try:
+                ema_fast = int(input("EMA rápida (default 12): ") or 12)
+                ema_slow = int(input("EMA lenta (default 26): ") or 26)
+            except ValueError:
+                print("Valores no válidos, usando 12 y 26.")
+        try:
+            from src.utils.utils import graficar_datos
+            graficar_datos(data, mostrar_ema=mostrar_ema, ema_fast=ema_fast, ema_slow=ema_slow)
+        except Exception as e:
+            print(f"❌ Error al graficar datos: {e}")
 
 def main():
     """Main entry point for the menu interface"""

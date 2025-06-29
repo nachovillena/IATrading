@@ -1,0 +1,20 @@
+{
+  "strategy_name": "pivot_breakout",
+  "description": "Breakout R2 pivote diario con filtros y salida fija",
+  "main_timeframe": "H1",
+  "optimized_params": [],
+  "param_space": {
+    "exit_bars": [5, 6, 7],
+    "apply_sma_filter": [false],
+    "sma_period": [14, 20],
+    "apply_roc_filter": [false],
+    "roc_period": [60, 120, 200]
+  },
+  "default_params": {
+    "exit_bars": 5,
+    "apply_sma_filter": true,
+    "sma_period": 14,
+    "apply_roc_filter": false,
+    "roc_period": 120
+  }
+}

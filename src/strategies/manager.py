@@ -4,6 +4,7 @@ from typing import Dict, List, Any, Optional
 from pathlib import Path
 import importlib
 import os
+import re
 
 from ..core.types import TradingData, SignalData
 from ..core.exceptions import StrategyError
@@ -34,7 +35,10 @@ class StrategyManager:
             if os.path.isdir(strategy_path) and os.path.exists(os.path.join(strategy_path, "strategy.py")):
                 strategy_name = entry
                 module_path = f"src.strategies.{strategy_name}.strategy"
-                class_name = f"{strategy_name.capitalize()}Strategy"
+                # Convierte a PascalCase correctamente (soporta snake_case y camelCase)
+                def to_pascal_case(name):
+                    return ''.join(word.capitalize() for word in re.split(r'[_\W]+|(?=[A-Z])', name) if word)
+                class_name = to_pascal_case(strategy_name) + "Strategy"
                 # Carga config si existe
                 config = self.load_strategy_config(strategy_name)
                 self.logger.debug(f"Config cargado para {strategy_name}: {config}")

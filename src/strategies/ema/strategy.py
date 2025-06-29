@@ -1,9 +1,11 @@
 """EMA (Exponential Moving Average) crossover strategy"""
 
+from fastapi import params
 import pandas as pd
 import numpy as np
 from typing import Dict, Any, List, Optional
 
+from src.core import config
 from src.core.base import BaseStrategy
 from src.core.types import TradingData, SignalData
 from src.core.exceptions import StrategyError
@@ -14,14 +16,16 @@ class EmaStrategy(BaseStrategy):
     
     def __init__(self, config: Dict[str, Any] = None):      
         super().__init__(config)
-        self.ema_fast = self.config.get('ema_fast', 12)
-        self.ema_slow = self.config.get('ema_slow', 26)
-        self.signal_threshold = self.config.get('signal_threshold', 0.001)
-        self.context_timeframes = self.config.get('context_timeframes', ['H1'])
-        self.stop_loss = self.config.get('stop_loss', 0.015)
-        self.take_profit = self.config.get('take_profit', 0.03)
-        self.context_alignment = self.config.get('context_alignment', 'majority')  # 'majority', 'any', 'all'
-        self.keep_position = self.config.get('keep_position', False)
+        # Primero busca en config raíz, luego en default_params
+        params = {**self.config.get('default_params', {}), **self.config}
+        self.ema_fast = params.get('ema_fast', 12)
+        self.ema_slow = params.get('ema_slow', 26)
+        self.signal_threshold = params.get('signal_threshold', 0.001)
+        self.context_timeframes = self.config.get('context_timeframes', ['H1', 'H4', 'D1'])
+        self.stop_loss = params.get('stop_loss', 0.015)
+        self.take_profit = params.get('take_profit', 0.03)
+        self.context_alignment = params.get('context_alignment', 'any')
+        self.keep_position = params.get('keep_position', False)
 
     def calculate_indicators(self, data: TradingData) -> pd.DataFrame:
         """Calculate EMA indicators"""

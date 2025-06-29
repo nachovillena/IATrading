@@ -181,32 +181,44 @@ class HyperparameterOptimizer:
             'n_features': best_n_features
         }
 
-    def optimize(self, strategy: str, symbol: str, data: Dict[str, pd.DataFrame], trials: int = 100) -> Dict[str, Any]:
+    def optimize(
+        self,
+        strategy: str,
+        symbol: str,
+        data: Dict[str, pd.DataFrame],
+        trials: int = 100,
+        score_metric: str = "total_return",  # Puedes cambiar a "profit_factor", "win_rate", etc.
+        min_trades: int = 10
+    ) -> Dict[str, Any]:
         """
-        Optimiza los hiperparámetros de una estrategia de trading usando contexto multi-timeframe.
+        Optimiza los hiperparámetros de cualquier estrategia de trading usando contexto multi-timeframe.
         - strategy: nombre de la estrategia
         - data: dict {timeframe: dataframe} con los históricos requeridos
         - trials: número de pruebas de Optuna
+        - score_metric: métrica objetivo para optimizar
+        - min_trades: mínimo de trades para considerar una solución válida
         """
         import optuna
 
         self.logger.info(f"🔍 Optimizando estrategia {strategy} con contexto: {list(data.keys())}")
 
-        # Aquí deberías cargar la clase de la estrategia y su espacio de parámetros
-        # Ejemplo genérico:
         from src.strategies.manager import StrategyManager
         strategy_manager = StrategyManager()
         config = strategy_manager.load_strategy_config(strategy)
         param_space = config.get("param_space", {})
         default_params = config.get("default_params", {})
 
-        # Define la función objetivo para Optuna
         trial_results = {}
+
         def objective(trial):
-            # Sugerir parámetros dentro del espacio definido
             params = {}
             for param, bounds in param_space.items():
-                if isinstance(bounds, list) and len(bounds) == 2 and all(isinstance(x, (int, float)) for x in bounds):
+                if (
+                    isinstance(bounds, list)
+                    and len(bounds) == 2
+                    and all(isinstance(x, (int, float)) for x in bounds)
+                    and not any(isinstance(x, bool) for x in bounds)
+                ):
                     if isinstance(bounds[0], int) and isinstance(bounds[1], int):
                         params[param] = trial.suggest_int(param, bounds[0], bounds[1])
                     else:
@@ -216,18 +228,22 @@ class HyperparameterOptimizer:
                 else:
                     params[param] = bounds
 
-            # Cargar la clase de la estrategia
+            # Ejemplo de filtro específico (puedes añadir más si lo necesitas)
+            if 'ema_fast' in params and 'ema_slow' in params:
+                if params['ema_fast'] >= params['ema_slow']:
+                    return -1
+
+            # Instancia la estrategia
             strategy_obj = strategy_manager.strategies.get(strategy)
             if strategy_obj is None:
                 strategy_obj = strategy_manager._load_strategy_class(strategy)
-            # Si es instancia, obtén la clase real
             strategy_class = strategy_obj if isinstance(strategy_obj, type) else type(strategy_obj)
 
-            # ⚠️ Instanciar la estrategia con el config completo + los params sugeridos
             config_for_trial = config.copy()
+            config_for_trial.update(config.get("default_params", {}))
             config_for_trial.update(params)
+
             strategy_instance = strategy_class(config_for_trial)
-            # Asegura que main_timeframe esté en la instancia
             if not hasattr(strategy_instance, "main_timeframe"):
                 strategy_instance.main_timeframe = config_for_trial.get("main_timeframe")
 
@@ -243,9 +259,7 @@ class HyperparameterOptimizer:
                 timestamp=pd.Timestamp.now()
             )
 
-            # Filtra el timeframe principal antes de cualquier operación
             context_timeframes = [tf for tf in data.keys() if tf.strip().lower() != main_tf.strip().lower()]
-           # Solo crea TradingData para el contexto
             context_data = {}
             for tf in context_timeframes:
                 df = data[tf]
@@ -260,38 +274,38 @@ class HyperparameterOptimizer:
                 )
             try:
                 result = strategy_instance.backtest_simple(main_data, context_data=context_data)
-                score = result['total_return']
-                # Guarda el resultado completo usando el número de trial
+                self.logger.info(f"    ✅ Trial succeeded: {result['num_trades']} trades, {result['total_return']:.2f} total return")
+                score = result.get(score_metric, 0.0)
                 trial_results[trial.number] = result
             except Exception as e:
                 self.logger.error(f"    ❌ Trial failed: {e}")
                 trial_results[trial.number] = None
                 return 0.0
 
+            if result.get('num_trades', 0) < min_trades:
+                return -1
+
             return score
 
-        # Ejecutar la optimización
         study = optuna.create_study(direction='maximize')
         study.optimize(objective, n_trials=trials, n_jobs=-1)
 
         best_params = study.best_params
         best_score = study.best_value
-
-        # Obtener información del mejor trial
         best_trial_number = study.best_trial.number
         best_result = trial_results.get(best_trial_number, {})
-        num_trades = best_result.get('num_trades', None)
-        final_equity = best_result.get('final_equity', None)
 
-        self.logger.info(f"✅ Optimización completada - Mejor score: {best_score:.3f}")
+        # Devuelve todas las métricas del mejor trial
+        self.logger.info(f"✅ Optimización completada - Mejor {score_metric}: {best_score:.3f}")
         self.logger.info(f"    Mejor params: {best_params}")
-        self.logger.info(f"    Número de trades: {num_trades}")
-        self.logger.info(f"    Equity final: {final_equity}")
+        for k, v in best_result.items():
+            if k not in ("trade_profits", "equity_curve"):
+                self.logger.info(f"    {k}: {v}")
+
         return {
             'best_params': best_params,
             'best_score': best_score,
             'n_trials': len(study.trials),
-            'num_trades': num_trades,
-            'final_equity': final_equity,
+            'best_metrics': best_result,
             'study': study
         }

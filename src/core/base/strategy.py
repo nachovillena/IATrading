@@ -180,8 +180,9 @@ class BaseStrategy(ABC):
             if value is None:
                 raise StrategyError(f"Parameter '{key}' cannot be None")
             
-            if isinstance(value, (int, float)) and value <= 0:
-                if not key.endswith('_threshold'):  # Thresholds can be very small
+            # --- MODIFICADO: Excluye bool de la validación numérica ---
+            if isinstance(value, (int, float)) and not isinstance(value, bool) and value <= 0:
+                if not key.endswith('_threshold'):
                     raise StrategyError(f"Parameter '{key}' must be positive, got {value}")
     
     def validate_data(self, data: TradingData) -> bool:  # ✅ ADD BOOL RETURN TYPE
